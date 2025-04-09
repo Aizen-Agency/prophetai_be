@@ -3,18 +3,9 @@ from flask_cors import CORS
 from .config import DevelopmentConfig
 from .models import db
 from dotenv import load_dotenv
-from sqlalchemy import inspect
-from datetime import datetime, timedelta
-from werkzeug.security import generate_password_hash
-
-# from app.routes.routes_googleauth.routes_googleauth import api_googlecalendar_Page
-from .routes.routes_auth import api_login
-import psycopg2
-from psycopg2 import sql
-from urllib.parse import urlparse
 from app.models.userData import UserData
 import os
-
+from .routes import init_routes
 
 def create_app():
     load_dotenv()
@@ -44,7 +35,7 @@ def create_app():
     db.init_app(app)
 
     # Register all blueprints
-    app.register_blueprint(api_login)
+    init_routes(app)
 
     # with app.app_context():
     #     UserData.__table__.create(db.engine, checkfirst=True)
