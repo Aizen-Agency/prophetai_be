@@ -37,8 +37,8 @@ def create_app():
     # Register all blueprints
     init_routes(app)
 
-    # with app.app_context():
-    #     UserData.__table__.create(db.engine, checkfirst=True)
+    with app.app_context():
+        UserData.__table__.create(db.engine, checkfirst=True)
 
     return app
 
