@@ -207,3 +207,149 @@ def generate_script_idea():
         return jsonify({"error": "An unexpected error occurred"}), 500
 
         
+@api_scripts.route('/generate-multiple-idea', methods=['POST'])
+def generateMultipleIdeas():
+    try:
+        data = request.get_json()
+        
+        # Validate request data
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+            
+        # Extract and validate required fields
+        required_fields = ['product_name', 'description', 'link', 'script_idea']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({"error": f"Missing or empty required field: {field}"}), 400
+
+        # Extract data
+        product_name = data['product_name']
+        description = data['description']
+        link = data['link']
+        script_idea = data['script_idea']
+
+        # Generate 6 variations of script ideas
+        script_variations = [
+            {
+                'id': 'copy1',
+                'title': f"(Instagram Reels Copy 1)",
+                'content': f"""[Upbeat music starts]
+👋 Hey creators! Tired of staring at blank screens?
+🤖 Meet {product_name}, your new content bestie!
+💡 {description}
+📱 {script_idea}
+🎨 Learns your style, sounds like you!
+🔍 SEO optimized for more views!
+🚀 Boost productivity, save time!
+😎 User-friendly, no tech wizardry needed!
+🔥 Say bye to writer's block, hello to wow content!
+🌟 Try {product_name} now!
+[Call to action: Swipe up to revolutionize your content game!]
+#ContentCreation #AIAssistant #{product_name.replace(' ', '')}""",
+                'date': datetime.now().isoformat()
+            },
+            {
+                'id': 'copy2',
+                'title': f"(Instagram Reels Copy 2)",
+                'content': f"""[Energetic beat drops]
+🎭 Content creators, listen up!
+😓 Struggling with writer's block?
+🚀 Introducing {product_name}!
+⚡ {description}
+🧠 Learns your unique style
+📊 SEO optimization built-in
+⏱️ Save hours on content creation
+🌈 Multiple formats, one tool
+💪 Empower your creativity
+🔥 Stand out in the digital noise
+[Visual: "Try {product_name} Free" button appears]
+Don't miss out on the future of content creation!
+#{product_name.replace(' ', '')} #ContentRevolution #CreatorTools""",
+                'date': datetime.now().isoformat()
+            },
+            {
+                'id': 'copy3',
+                'title': f"(Instagram Reels Copy 3)",
+                'content': f"""[Upbeat electronic music]
+👀 Attention all content creators!
+🤯 Feeling overwhelmed by content demands?
+🦸‍♀️ {product_name} to the rescue!
+🎨 {description}
+⚡ Lightning-fast creation process
+📈 Built-in SEO for maximum reach
+🔄 Adapts to your style over time
+💡 Never run out of ideas again
+🚀 Skyrocket your content strategy
+✨ Unlock your creative potential
+[Text overlay: "Join the AI content revolution"]
+Transform your content game with {product_name}!
+#AIContentCreation #DigitalMarketing #{product_name.replace(' ', '')}""",
+                'date': datetime.now().isoformat()
+            },
+            {
+                'id': 'copy4',
+                'title': f"(Instagram Reels Copy 4)",
+                'content': f"""[Soft, inspiring background music]
+📝 Content creation got you stressed?
+😴 Tired of late nights brainstorming?
+🌟 Meet {product_name} - your creative companion
+🧠 AI-powered content generation
+🎯 Tailored to your brand voice
+📊 SEO-optimized for better reach
+⏰ Save time, boost productivity
+🔍 Never struggle for ideas again
+💪 Empower your content strategy
+🚀 Take your brand to new heights
+[Visual: "Start your free trial" CTA]
+Experience the future of content creation now!
+#ContentCreation #AITechnology #{product_name.replace(' ', '')}""",
+                'date': datetime.now().isoformat()
+            },
+            {
+                'id': 'copy5',
+                'title': f"(Instagram Reels Copy 5)",
+                'content': f"""[Upbeat, motivational music]
+🎭 Calling all content creators!
+😓 Exhausted from constant content demands?
+💡 Discover {product_name}
+🚀 Revolutionize your content strategy
+⚡ Generate ideas in seconds
+📝 Create blogs, social posts, and more
+🧠 AI learns and adapts to your style
+📈 Built-in SEO for maximum impact
+⏳ Save time, reduce stress
+🌈 Unleash your creative potential
+[Text appears: "Join the AI content revolution"]
+Level up your content game with {product_name}!
+#AIContentCreator #DigitalMarketing #{product_name.replace(' ', '')}""",
+                'date': datetime.now().isoformat()
+            },
+            {
+                'id': 'copy6',
+                'title': f"(Instagram Reels Copy 6)",
+                'content': f"""[Dynamic, energetic music]
+👋 Hey there, content creators!
+😪 Tired of content creation burnout?
+🦸 {product_name} is here to save the day!
+🧠 AI-powered content generation
+🎨 Maintains your unique brand voice
+📊 SEO-optimized for better visibility
+⚡ Create content in minutes, not hours
+📱 Perfect for social media, blogs, and more
+🚀 Boost your productivity and reach
+💪 Stay ahead of the competition
+[Visual: "Try {product_name} Now" button]
+Revolutionize your content strategy today!
+#ContentCreation #AIAssistant #{product_name.replace(' ', '')}""",
+                'date': datetime.now().isoformat()
+            }
+        ]
+
+        return jsonify({
+            "message": "Script ideas generated successfully",
+            "scripts": script_variations
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
