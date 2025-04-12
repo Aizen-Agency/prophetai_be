@@ -3,7 +3,10 @@ from flask_cors import CORS
 from .config import DevelopmentConfig
 from .models import db
 from dotenv import load_dotenv
-from app.models.userData import UserData
+from app.models.userData import User
+from app.models.scriptsModel import Script
+from app.models.videoModel import Video
+from app.models.insights import Insights
 import os
 from .routes import init_routes
 
@@ -38,7 +41,10 @@ def create_app():
     init_routes(app)
 
     with app.app_context():
-        UserData.__table__.create(db.engine, checkfirst=True)
+        User.__table__.create(db.engine, checkfirst=True)
+        Script.__table__.create(db.engine, checkfirst=True)
+        Video.__table__.create(db.engine, checkfirst=True)
+        # Insights.__table__.create(db.engine, checkfirst=True)
 
     return app
 

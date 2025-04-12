@@ -1,5 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
+from ..extensions import db
+from .userData import User
+from .scriptsModel import Script
+from .videoModel import Video
+from .insights import Insights
 
-
-db = SQLAlchemy()
+__all__ = ['db', 'User', 'Script', 'Video', 'Insights']
 

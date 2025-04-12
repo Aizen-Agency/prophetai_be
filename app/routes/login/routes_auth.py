@@ -7,8 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
-from app.models import db
-from app.models.userData import UserData
+from app.extensions import db
+from app.models.userData import User
 import jwt
 from datetime import datetime, timedelta
 
@@ -47,14 +47,14 @@ def signup():
             return jsonify({"error": "Password must be at least 8 characters long"}), 400
 
         # Check if email already exists
-        if UserData.query.filter_by(email=email).first():
+        if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already registered"}), 409
 
         # Hash password
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         
         # Create new user
-        new_user = UserData(
+        new_user = User(
             email=email,
             password=hashed_password,
             phoneNo=phoneNo,
@@ -106,7 +106,7 @@ def login():
             return jsonify({"error": "Invalid email format"}), 400
 
         # Find user
-        user = UserData.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
         if not user:
             return jsonify({"error": "Invalid email or password"}), 401
 

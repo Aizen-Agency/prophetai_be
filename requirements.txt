@@ -54,6 +54,7 @@ openai==1.35.3
 packaging==23.2
 Pillow==10.1.0
 pilmoji==2.0.4
+psycopg2-binary==2.9.10
 pyasn1==0.5.1
 pyasn1-modules==0.3.0
 pydantic==2.7.4

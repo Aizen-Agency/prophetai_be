@@ -1,4 +1,4 @@
-from . import db
+from ..extensions import db
 from sqlalchemy import Integer, String, ForeignKey, DateTime, func
 from datetime import datetime
 

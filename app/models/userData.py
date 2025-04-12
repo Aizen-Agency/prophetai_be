@@ -1,15 +1,16 @@
-from . import db
-from sqlalchemy import Boolean, String, Text, ForeignKey, func, Integer, DateTime
-from datetime import datetime
+from ..extensions import db
+from sqlalchemy import Integer, String, DateTime, func
 
+class User(db.Model):
+    __tablename__ = 'userData'
 
-class UserData(db.Model):
+    id = db.Column(Integer, primary_key=True)
+    firstname = db.Column(String(50), nullable=False)
+    lastname = db.Column(String(50), nullable=False)
+    phoneNo = db.Column(String(15), nullable=False)
+    email = db.Column(String(100), unique=True, nullable=False)
+    password = db.Column(String(100), nullable=False)
+    created_at = db.Column(DateTime, server_default=func.now())
 
-    __tablename__ = 'userData' 
-     
-    id = db.Column(db.Integer, primary_key=True)
-    firstname = db.Column(db.String(100), nullable=False)
-    lastname = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(150), nullable=False)
-    phoneNo = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
+    def __repr__(self):
+        return f"<User {self.id} | {self.email}>"

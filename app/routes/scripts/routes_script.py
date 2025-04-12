@@ -7,8 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
-from app.models import db
-from app.models.userData import UserData
+from app.extensions import db
+from app.models.userData import User
 import jwt
 from datetime import datetime, timedelta
 
@@ -217,7 +217,7 @@ def generateMultipleIdeas():
             return jsonify({"error": "No data provided"}), 400
             
         # Extract and validate required fields
-        required_fields = ['product_name', 'description', 'link', 'script_idea']
+        required_fields = ['product_name', 'description', 'script_idea']
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({"error": f"Missing or empty required field: {field}"}), 400
