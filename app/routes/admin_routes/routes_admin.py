@@ -1,11 +1,11 @@
 from flask import Blueprint, jsonify, request
-from app.models.video import Video
-from app.models.user import User
+from app.models.videoModel import Video
+from app.models.userData import User
 from app import db
 
-admin_routes = Blueprint('admin_routes', __name__)
+admin_bp = Blueprint('admin_routes', __name__)
 
-@admin_routes.route('/admin/videos', methods=['GET'])
+@admin_bp.route('/admin/videos', methods=['GET'])
 def get_all_videos():
     try:
         # Get all videos with user information

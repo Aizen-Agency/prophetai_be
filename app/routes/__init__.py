@@ -5,6 +5,7 @@ from .scripts.routes_script import api_scripts
 from .save_scripts.routes_save_scripts import save_scripts_bp
 from .save_videos.routes_save_videos import video_bp
 from .dashboard.route_dashboard import dashboard_bp
+from .admin_routes.routes_admin import admin_bp
 
 def init_routes(app):
     app.register_blueprint(api_login)
@@ -12,3 +13,4 @@ def init_routes(app):
     app.register_blueprint(save_scripts_bp)
     app.register_blueprint(video_bp)
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(admin_bp)
