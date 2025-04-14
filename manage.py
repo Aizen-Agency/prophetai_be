@@ -1,6 +1,6 @@
 from flask.cli import FlaskGroup
 from app import create_app, drop_all_tables, db
-from app.models.user import User
+from app.models.userData import User
 from werkzeug.security import generate_password_hash
 
 cli = FlaskGroup(create_app=create_app)

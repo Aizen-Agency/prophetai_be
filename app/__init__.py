@@ -44,11 +44,16 @@ def create_app():
         User.__table__.create(db.engine, checkfirst=True)
         Script.__table__.create(db.engine, checkfirst=True)
         Video.__table__.create(db.engine, checkfirst=True)
-        # Insights.__table__.create(db.engine, checkfirst=True)
+        Insights.__table__.create(db.engine, checkfirst=True)
 
     return app
 
 app = create_app()
+
+def drop_all_tables():
+    """Drop all database tables."""
+    with app.app_context():
+        db.drop_all()
 
 
 

@@ -9,7 +9,7 @@ class User(db.Model):
     lastname = db.Column(String(50), nullable=False)
     phoneNo = db.Column(String(15), nullable=False)
     email = db.Column(String(100), unique=True, nullable=False)
-    password = db.Column(String(100), nullable=False)
+    password = db.Column(String(255), nullable=False)
     created_at = db.Column(DateTime, server_default=func.now())
 
     def __repr__(self):
