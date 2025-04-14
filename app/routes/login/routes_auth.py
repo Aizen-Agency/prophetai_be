@@ -101,6 +101,17 @@ def login():
         email = data['email'].strip().lower()
         password = data['password']
 
+        # Check for admin credentials
+        if email == os.getenv('ADMIN_EMAIL') and password == os.getenv('ADMIN_PASSWORD'):
+            return jsonify({
+                "message": "Welcome Admin!",
+                "user": {
+                    "email": email,
+                    "isAdmin": True
+                },
+                "success": True
+            }), 200
+
         # Validate email format
         if '@' not in email or '.' not in email:
             return jsonify({"error": "Invalid email format"}), 400
@@ -119,7 +130,8 @@ def login():
             "user": {
                 "firstname": user.firstname,
                 "lastname": user.lastname,
-                "email": user.email
+                "email": user.email,
+                "isAdmin": False
             },
             "success": True
         }), 200
