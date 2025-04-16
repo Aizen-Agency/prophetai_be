@@ -119,15 +119,16 @@ def login():
         # Find user
         user = User.query.filter_by(email=email).first()
         if not user:
-            return jsonify({"error": "Invalid email or password"}), 401
+            return jsonify({"error": "Email not found"}), 401
 
         # Verify password
         if not check_password_hash(user.password, password):
-            return jsonify({"error": "Invalid email or password"}), 401
+            return jsonify({"error": "Wrong password"}), 401
 
         return jsonify({
             "message": f"Welcome {user.firstname}!",
             "user": {
+                "id": user.id,
                 "firstname": user.firstname,
                 "lastname": user.lastname,
                 "email": user.email,
