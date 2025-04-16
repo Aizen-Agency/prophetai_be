@@ -9,17 +9,13 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # Changed to use DATABASE_URL from Heroku
 
 
 class DevelopmentConfig(Config):
     DEBUG = True
-
-    database_url = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    if database_url and database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    SQLALCHEMY_DATABASE_URI = database_url
-    # SQLALCHEMY_DATABASE_URI = "postgresql://postgres:pEm8Y9yaYu1n1UDEV04K@autoapplier.cohuqar8xvwd.us-west-2.rds.amazonaws.com:5432/postgres"
+    # Heroku Postgres automatically provides DATABASE_URL
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
 class ProductionConfig(Config):
     DEBUG = False

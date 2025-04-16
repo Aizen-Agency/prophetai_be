@@ -1,50 +1,23 @@
 from flask import Flask
 from flask_cors import CORS
 from .config import DevelopmentConfig
-from .models import db
 from dotenv import load_dotenv
-from app.models.userData import User
-from app.models.scriptsModel import Script
-from app.models.videoModel import Video
-from app.models.insights import Insights
 import os
 from .routes import init_routes
+from .models import init_models
 
 def create_app():
     load_dotenv()
     app = Flask(__name__)
     CORS(app, resources={r"/*": {"origins": "*"}} , supports_credentials=True)
-    # CORS(app, resources={
-    #     r"/*": {
-    #         "origins": "*",
-    #         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    #         "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
-    #         "expose_headers": ["Content-Range", "X-Content-Range"],
-    #         "supports_credentials": True,
-    #         "max_age": 600,
-    #         "send_wildcard": False
-    #     }
-    # })
-    # CORS(app, 
-    # resources={r"/*": {
-    #     "origins": ["http://localhost:3000", "https://aizen-crm-frontend-hmci.vercel.app"],  # Specify exact origins
-    #     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    #     "allow_headers": ["Content-Type", "Authorization"],  # Added Authorization header
-    #     "supports_credentials": True
-    # }})
-
+    
     app.config.from_object(DevelopmentConfig)  # Load development config
-
-    db.init_app(app)
 
     # Register all blueprints
     init_routes(app)
 
-    with app.app_context():
-        User.__table__.create(db.engine, checkfirst=True)
-        Script.__table__.create(db.engine, checkfirst=True)
-        Video.__table__.create(db.engine, checkfirst=True)
-        Insights.__table__.create(db.engine, checkfirst=True)
+    # Initialize database tables
+    init_models()
 
     return app
 
