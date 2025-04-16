@@ -85,6 +85,8 @@ def login():
             return jsonify({
                 'user': {
                     'email': admin_email,
+                    'firstname': 'Admin',
+                    'id': 0,
                     'isAdmin': True
                 }
             }), 200 
