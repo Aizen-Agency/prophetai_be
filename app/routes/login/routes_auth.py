@@ -81,6 +81,13 @@ def login():
         admin_email = os.getenv('ADMIN_EMAIL')
         admin_password = os.getenv('ADMIN_PASSWORD')
         is_admin = (data.get('email') == admin_email and data.get('password') == admin_password)
+        if is_admin:
+            return jsonify({
+                'user': {
+                    'email': admin_email,
+                    'isAdmin': True
+                }
+            }), 200 
 
         user = get_user_by_email(data.get('email'))
         if not user or not check_password_hash(user.password, data.get('password')):
