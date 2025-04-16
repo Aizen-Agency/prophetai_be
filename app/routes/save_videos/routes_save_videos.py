@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from ...models.videoModel import Video
 from ...models.scriptsModel import Script
-from ...extensions import db
 import uuid
 import os
 from datetime import datetime
@@ -9,7 +8,7 @@ from datetime import datetime
 video_bp = Blueprint('video', __name__)
 
 # Dummy S3 functionality
-def upload_to_s3(video_data, filename):
+def upload_to_s3( filename):
     """
     Dummy function to simulate S3 upload
     Returns a dummy S3 URL
@@ -22,55 +21,55 @@ def upload_to_s3(video_data, filename):
 def generate_video():
     try:
         data = request.get_json()
-        
-        # Validate required fields
-        required_fields = ['user_id', 'script_id']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'Missing required field: {field}'}), 400
-        
-        # Check if script exists
-        script = Script.query.get(data['script_id'])
-        # if not script:
-        #     return jsonify({'error': f'Script with id {data["script_id"]} not found'}), 404
-        
-        # Generate a unique filename
+        user_id = data.get('user_id')
+        script_id = data.get('script_id')
+
+
+        if not all([user_id, script_id]):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Generate unique filename
         filename = f"{uuid.uuid4()}.mp4"
         
-        # Simulate video generation and S3 upload
-        video_url = upload_to_s3(None, filename)
+        # Upload to S3 (dummy implementation)
+        video_url = upload_to_s3( filename)
         
-        # Create new video record
-        new_video = Video(
-            user_id=data['user_id'],
-            script_id=data['script_id'],
+        # Create video record
+        video = Video(
+            user_id=user_id,
+            script_id=script_id,
             video_url=video_url,
-            size="50MB"  # Dummy size
+            size="50MB",  # Dummy size
+            created_at=datetime.now()
         )
-        
-        db.session.add(new_video)
-        db.session.commit()
-        
+        video.save()
+
         return jsonify({
-            'message': 'Video generated successfully',
-            'video_id': new_video.id,
-            'video_url': video_url
+            'message': 'Video generated and saved successfully',
+            'video': {
+                'id': video.id,
+                'url': video.video_url,
+                'created_at': video.created_at
+            }
         }), 201
-        
+
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @video_bp.route('/videos/<int:user_id>', methods=['GET'])
 def get_user_videos(user_id):
     try:
-        videos = Video.query.filter_by(user_id=user_id).all()
-        return jsonify([{
-            'id': video.id,
-            'script_id': video.script_id,
-            'video_url': video.video_url,
-            'size': video.size,
-            'created_at': video.created_at.isoformat()
-        } for video in videos]), 200
+        # Get all videos for the user
+        videos = Video.get_by_user(user_id)
+        
+        return jsonify({
+            'videos': [{
+                'id': video.id,
+                'url': video.video_url,
+                'created_at': video.created_at,
+                'size': video.size
+            } for video in videos]
+        }), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500 

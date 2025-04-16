@@ -1,6 +1,5 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from ...models.insights import Insights
-from ...extensions import db
 from datetime import datetime
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -8,7 +7,7 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @dashboard_bp.route('/insights/<int:user_id>', methods=['GET'])
 def get_user_insights(user_id):
     try:
-        insights = Insights.query.filter_by(user_id=user_id).first()
+        insights = Insights.get_by_user(user_id)
         
         if not insights:
             return jsonify({
@@ -31,64 +30,54 @@ def get_user_insights(user_id):
                 }
             }), 200
 
+        # Get current month
+        current_month = datetime.now().strftime('%B').lower()
+        
         # Get data for all months
-        months_data = {
-            'january': insights.get_monthly_data('january'),
-            'february': insights.get_monthly_data('february'),
-            'march': insights.get_monthly_data('march'),
-            'april': insights.get_monthly_data('april'),
-            'may': insights.get_monthly_data('may'),
-            'june': insights.get_monthly_data('june'),
-            'july': insights.get_monthly_data('july'),
-            'august': insights.get_monthly_data('august'),
-            'september': insights.get_monthly_data('september'),
-            'october': insights.get_monthly_data('october'),
-            'november': insights.get_monthly_data('november'),
-            'december': insights.get_monthly_data('december')
-        }
+        months_data = {}
+        months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                 'july', 'august', 'september', 'october', 'november', 'december']
+        
+        for month in months:
+            months_data[month] = insights.get_monthly_data(month)
 
         return jsonify({
             'message': 'Insights retrieved successfully',
             'data': {
-                'months': months_data
+                'months': months_data,
+                'current_month': current_month
             }
         }), 200
 
     except Exception as e:
-        return jsonify({
-            'message': 'Error retrieving insights',
-            'error': str(e)
-        }), 500
+        return jsonify({'error': str(e)}), 500
 
 @dashboard_bp.route('/insights/<int:user_id>/update', methods=['POST'])
 def update_user_insights(user_id):
     try:
         data = request.get_json()
-        insights = Insights.query.filter_by(user_id=user_id).first()
-        
+        month = data.get('month')
+        metrics = data.get('metrics')
+
+        if not month or not metrics:
+            return jsonify({'error': 'Missing month or metrics data'}), 400
+
+        # Get or create insights for user
+        insights = Insights.get_by_user(user_id)
         if not insights:
             insights = Insights(user_id=user_id)
-            db.session.add(insights)
-        
-        # Update data for the specified month
-        month = data.get('month', datetime.now().strftime('%B').lower())
-        insights.update_monthly_data(month, {
-            'articles': data.get('articles', 0),
-            'scripts': data.get('scripts', 0),
-            'videos_generated': data.get('videos_generated', 0),
-            'videos_posted': data.get('videos_posted', 0)
-        })
-        
-        db.session.commit()
-        
+            insights.save()
+
+        # Update metrics for the specified month
+        insights.update_monthly_data(month, metrics)
+
         return jsonify({
             'message': 'Insights updated successfully',
-            'data': insights.get_monthly_data(month)
+            'data': {
+                'month': month,
+                'metrics': metrics
+            }
         }), 200
 
     except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'message': 'Error updating insights',
-            'error': str(e)
-        }), 500 
+        return jsonify({'error': str(e)}), 500 

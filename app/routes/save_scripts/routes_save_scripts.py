@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from app.models.scriptsModel import Script
-from app.extensions import db
 from datetime import datetime
 
 save_scripts_bp = Blueprint('save_scripts', __name__)
@@ -11,35 +10,41 @@ def save_script():
         data = request.get_json()
         
         # Check if script exists
-        existing_script = Script.query.filter_by(
-            user_id=data['user_id'],
-            title=data['title']
-        ).first()
+        existing_script = Script.get_by_user_and_title(data['user_id'], data['title'])
         
         if existing_script:
             # Update existing script
             existing_script.content = data['content']
-            existing_script.product_name = data.get('product_name')
-            existing_script.is_locked = data.get('is_locked', False)
-            db.session.commit()
+            existing_script.updated_at = datetime.now()
+            existing_script.update()
+            
             return jsonify({
                 'message': 'Script updated successfully',
-                'script_id': existing_script.id
+                'script': {
+                    'id': existing_script.id,
+                    'title': existing_script.title,
+                    'content': existing_script.content,
+                    'updated_at': existing_script.updated_at
+                }
             }), 200
         else:
             # Create new script
-            new_script = Script(
+            script = Script(
                 user_id=data['user_id'],
                 title=data['title'],
                 content=data['content'],
-                product_name=data.get('product_name'),
-                is_locked=data.get('is_locked', False)
+                created_at=datetime.now()
             )
-            db.session.add(new_script)
-            db.session.commit()
+            script.save()
+            
             return jsonify({
                 'message': 'Script saved successfully',
-                'script_id': new_script.id
+                'script': {
+                    'id': script.id,
+                    'title': script.title,
+                    'content': script.content,
+                    'created_at': script.created_at
+                }
             }), 201
             
     except Exception as e:
@@ -49,17 +54,17 @@ def save_script():
 def delete_script():
     try:
         data = request.get_json()
-        script = Script.query.filter_by(
-            id=data['script_id'],
-            user_id=data['user_id']
-        ).first()
+        script_id = data.get('script_id')
         
-        if script:
-            db.session.delete(script)
-            db.session.commit()
-            return jsonify({'message': 'Script deleted successfully'}), 200
-        else:
-            return jsonify({'error': 'Script not found'}), 404
+        if not script_id:
+            return jsonify({'error': 'Script ID is required'}), 400
             
+        # Delete script
+        Script.delete(script_id)
+        
+        return jsonify({
+            'message': 'Script deleted successfully'
+        }), 200
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500

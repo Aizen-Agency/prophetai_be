@@ -1,144 +1,100 @@
 import os
-import uuid
-from random import choice
-from flask import Blueprint, Flask, jsonify, request
-from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
+from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
-from app.extensions import db
 from app.models.userData import User
+from app.extensions import get_db_connection
 import jwt
 from datetime import datetime, timedelta
+import psycopg2.extras
 
 load_dotenv()
 
 api_login = Blueprint("login", __name__, url_prefix="")
 
+def get_user_by_email(email):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM userData WHERE email = %s", (str(email),))
+        user_data = cur.fetchone()
+        cur.close()
+        conn.close()
+        if user_data:
+            return User(**user_data)
+        return None
+    except Exception as e:
+        print(f"Error getting user by email: {str(e)}")
+        raise
 
 @api_login.route('/signup', methods=['POST'])
 def signup():
     try:
         data = request.get_json()
-        
-        # Validate request data
         if not data:
-            return jsonify({"error": "No data provided"}), 400
-            
-        # Extract and validate required fields
-        required_fields = ['email', 'password', 'phoneNo', 'firstname', 'lastname']
+            return jsonify({'error': 'No data provided'}), 400
+
+        required_fields = ['firstname', 'lastname', 'phoneNo', 'email', 'password']
         for field in required_fields:
-            if field not in data or not data[field]:
-                return jsonify({"error": f"Missing or empty required field: {field}"}), 400
+            if field not in data or not isinstance(data[field], str) or not data[field].strip():
+                return jsonify({'error': f"Field '{field}' is required and must be a non-empty string"}), 400
 
-        email = data['email'].strip().lower()
-        password = data['password']
-        phoneNo = data['phoneNo'].strip()
-        firstname = data['firstname'].strip()
-        lastname = data['lastname'].strip()
+        print("data present", data)
 
-        # Validate email format
-        if '@' not in email or '.' not in email:
-            return jsonify({"error": "Invalid email format"}), 400
+        # Check if user exists
+        existing_user = get_user_by_email(data.get('email'))
+        if existing_user:
+            return jsonify({'error': 'User already exists'}), 400
 
-        # Validate password strength
-        if len(password) < 8:
-            return jsonify({"error": "Password must be at least 8 characters long"}), 400
+        print("user not found")
 
-        # Check if email already exists
-        if User.query.filter_by(email=email).first():
-            return jsonify({"error": "Email already registered"}), 409
-
-        # Hash password
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        
-        # Create new user
-        new_user = User(
-            email=email,
-            password=hashed_password,
-            phoneNo=phoneNo,
-            firstname=firstname,
-            lastname=lastname
+        user = User(
+            firstname=data['firstname'],
+            lastname=data['lastname'],
+            phoneNo=data['phoneNo'],
+            email=data['email'],
+            password=generate_password_hash(data['password'])
         )
+        user.save()
 
-        # Add to database
-        db.session.add(new_user)
-        db.session.commit()
+        print("user saved")
 
         return jsonify({
-            "message": "User created successfully",
-            "user": {
-                "email": email,
-                "firstname": firstname,
-                "lastname": lastname
-            }
+            'message': 'User created successfully',
+            'user': user.to_dict()
         }), 201
 
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        print(f"[SQLAlchemyError] {str(e)}") 
-        return jsonify({"error": "Database error occurred"}), 500
     except Exception as e:
-        print(f"[ERROR] {str(e)}")
-        return jsonify({"error": "An unexpected error occurred"}), 500
-
-
+        print("Error in signup:", str(e))
+        return jsonify({'error': str(e)}), 500
 
 @api_login.route('/login', methods=['POST'])
 def login():
     try:
         data = request.get_json()
+        if not data or 'email' not in data or 'password' not in data:
+            return jsonify({'error': 'Email and password are required'}), 400
         
-        # Validate request data
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
+        print("data present", data)
 
-        # Validate required fields
-        if 'email' not in data or 'password' not in data:
-            return jsonify({"error": "Missing email or password"}), 400
+        # Check if credentials match admin credentials
+        admin_email = os.getenv('ADMIN_EMAIL')
+        admin_password = os.getenv('ADMIN_PASSWORD')
+        is_admin = (data.get('email') == admin_email and data.get('password') == admin_password)
 
-        email = data['email'].strip().lower()
-        password = data['password']
+        user = get_user_by_email(data.get('email'))
+        if not user or not check_password_hash(user.password, data.get('password')):
+            return jsonify({'error': 'Invalid email or password'}), 401
+        
+        print("user found", user)
 
-        # Check for admin credentials
-        if email == os.getenv('ADMIN_EMAIL') and password == os.getenv('ADMIN_PASSWORD'):
-            return jsonify({
-                "message": "Welcome Admin!",
-                "user": {
-                    "email": email,
-                    "isAdmin": True
-                },
-                "success": True
-            }), 200
-
-        # Validate email format
-        if '@' not in email or '.' not in email:
-            return jsonify({"error": "Invalid email format"}), 400
-
-        # Find user
-        user = User.query.filter_by(email=email).first()
-        if not user:
-            return jsonify({"error": "Email not found"}), 401
-
-        # Verify password
-        if not check_password_hash(user.password, password):
-            return jsonify({"error": "Wrong password"}), 401
+        user_dict = user.to_dict()
+        user_dict['isAdmin'] = is_admin
 
         return jsonify({
-            "message": f"Welcome {user.firstname}!",
-            "user": {
-                "id": user.id,
-                "firstname": user.firstname,
-                "lastname": user.lastname,
-                "email": user.email,
-                "isAdmin": False
-            },
-            "success": True
+            'user': user_dict
         }), 200
 
-    except SQLAlchemyError as e:
-        return jsonify({"error": "Database error occurred"}), 500
     except Exception as e:
-        return jsonify({"error": "An unexpected error occurred"}), 500
-
+        print("Error in login:", str(e))
+        return jsonify({'error': str(e)}), 500

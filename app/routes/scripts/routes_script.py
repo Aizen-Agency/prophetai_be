@@ -7,8 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
-from app.extensions import db
 from app.models.userData import User
+from app.models.scriptsModel import Script
 import jwt
 from datetime import datetime, timedelta
 
@@ -16,11 +16,11 @@ load_dotenv()
 
 api_scripts = Blueprint("scripts", __name__, url_prefix="")
 
-
 @api_scripts.route('/generate-scripts', methods=['POST'])
 def generate_script():
     try:
         data = request.get_json()
+        user_id = data.get('user_id')
         
         # Validate request data
         if not data:
