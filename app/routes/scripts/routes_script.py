@@ -114,7 +114,7 @@ def generate_script_idea():
             return jsonify({"error": "No data provided"}), 400
             
         # Extract and validate required fields
-        required_fields = ['product_name', 'description', 'link', 'script_idea']
+        required_fields = ['product_name', 'description', 'script_idea']
         for field in required_fields:
             if field not in data or not data[field]:
                 return jsonify({"error": f"Missing or empty required field: {field}"}), 400
@@ -122,7 +122,7 @@ def generate_script_idea():
         # Extract data
         product_name = data['product_name']
         description = data['description']
-        link = data['link']
+        link = data['link'] or ''
         script_idea = data['script_idea']
 
         # Parse inclusion and exclusion criteria from script_idea
