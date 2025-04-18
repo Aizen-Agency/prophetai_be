@@ -11,6 +11,7 @@ from app.models.userData import User
 from app.models.scriptsModel import Script
 import jwt
 from datetime import datetime, timedelta
+from app.controllers.apify.twitter_scraper import scrape_twitter_posts_controller
 
 load_dotenv()
 
@@ -124,6 +125,20 @@ def generate_script_idea():
         description = data['description']
         link = data['link'] or ''
         script_idea = data['script_idea']
+
+        if link:
+            print("link", link)
+            result, status = scrape_twitter_posts_controller(link)
+            print("Scraped Twitter Data:", result)
+            # return jsonify(result), status
+
+        # If no link, maybe continue to idea generation logic instead
+        # return jsonify({
+        #     "message": "No Twitter link provided, skipping scraping.",
+        #     "product_name": product_name,
+        #     "description": description,
+        #     "script_idea": script_idea
+        # }), 200
 
         # Parse inclusion and exclusion criteria from script_idea
         lines = script_idea.lower().split('\n')
