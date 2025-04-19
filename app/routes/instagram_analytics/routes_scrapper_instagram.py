@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
 from app.controllers.apify.instagram_scraper import scrape_instagram_profile_posts
+from app.controllers.chat_gpt.calculate_analytics import calculate_instagram_analytics
 
 api_instagram = Blueprint("instagram", __name__, url_prefix="")
 
-@api_instagram.route('/scrape-instagram', methods=['POST'])
-def scrape_instagram():
+@api_instagram.route('/instagram-analytics', methods=['POST'])
+def instagram_analytics():
     try:
         data = request.get_json()
         
@@ -17,10 +18,16 @@ def scrape_instagram():
         if not profile_url:
             return jsonify({"error": "Missing required field: profile_url"}), 400
 
-        # Call the scraper controller
-        result, status_code = scrape_instagram_profile_posts(profile_url)
+        # First scrape the Instagram profile
+        scraped_data, status_code = scrape_instagram_profile_posts(profile_url)
         
-        return jsonify(result), status_code
+        if status_code != 200:
+            return jsonify(scraped_data), status_code
+
+        # Then calculate analytics from the scraped data
+        analytics = calculate_instagram_analytics(scraped_data.get('posts', []))
+        
+        return jsonify(analytics), 200
 
     except Exception as e:
         print(f"[ERROR] {str(e)}")
