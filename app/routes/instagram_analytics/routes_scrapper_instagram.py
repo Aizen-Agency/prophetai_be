@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.controllers.apify.instagram_scraper import scrape_instagram_posts_controller
+from app.controllers.apify.instagram_scraper import scrape_instagram_profile_posts
 
 api_instagram = Blueprint("instagram", __name__, url_prefix="")
 
@@ -18,7 +18,7 @@ def scrape_instagram():
             return jsonify({"error": "Missing required field: profile_url"}), 400
 
         # Call the scraper controller
-        result, status_code = scrape_instagram_posts_controller(profile_url)
+        result, status_code = scrape_instagram_profile_posts(profile_url)
         
         return jsonify(result), status_code
 
