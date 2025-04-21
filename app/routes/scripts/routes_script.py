@@ -39,6 +39,7 @@ def generate_script():
         description = data['description']
         link = data.get('link')
         script_idea = data['script_idea']
+        
         twitter_content = None
 
         # If Twitter link is provided, scrape the content
@@ -83,6 +84,9 @@ def generate_script_idea():
         script_idea = data['script_idea']
         twitter_content = None
 
+        # Generate a unique idea_id
+        idea_id = str(uuid.uuid4())
+
         # If Twitter link is provided, scrape the content
         if link:
             result, status = scrape_twitter_posts_controller(link)
@@ -99,6 +103,10 @@ def generate_script_idea():
 
         if 'error' in response:
             return jsonify(response), 500
+
+        # Add idea_id to the response
+        response['idea_id'] = idea_id
+        response['idea_title'] = product_name
 
         return jsonify(response), 200
 
