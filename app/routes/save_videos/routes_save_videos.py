@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from ...models.videoModel import Video
 from ...models.scriptsModel import Script
+from ...controllers.S3.awsS3 import s3_service
 import uuid
 import os
 from datetime import datetime
@@ -23,23 +24,34 @@ def generate_video():
         data = request.get_json()
         user_id = data.get('user_id')
         script_id = data.get('script_id')
+        video_file = request.files.get('video')
 
-
-        if not all([user_id, script_id]):
+        if not all([user_id, script_id, video_file]):
             return jsonify({'error': 'Missing required fields'}), 400
 
         # Generate unique filename
         filename = f"{uuid.uuid4()}.mp4"
         
-        # Upload to S3 (dummy implementation)
-        video_url = upload_to_s3( filename)
+        # Save the file temporarily
+        temp_path = f"/tmp/{filename}"
+        video_file.save(temp_path)
+        
+        # Upload to S3
+        if not s3_service.upload_file(temp_path, filename):
+            return jsonify({'error': 'Failed to upload video to S3'}), 500
+            
+        # Get the S3 URL
+        video_url = s3_service.get_object_url(filename)
+        
+        # Clean up temporary file
+        os.remove(temp_path)
         
         # Create video record
         video = Video(
             user_id=user_id,
             script_id=script_id,
             video_url=video_url,
-            size="50MB",  # Dummy size
+            size=os.path.getsize(temp_path),  # Get actual file size
             created_at=datetime.now()
         )
         video.save()
@@ -49,7 +61,8 @@ def generate_video():
             'video': {
                 'id': video.id,
                 'url': video.video_url,
-                'created_at': video.created_at
+                'created_at': video.created_at,
+                'size': video.size
             }
         }), 201
 
