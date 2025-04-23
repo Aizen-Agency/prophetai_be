@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from app.controllers.apify.twitter_scraper import scrape_twitter_posts_controller
 from app.controllers.chat_gpt.script_generation import generate_scripts_with_chatgpt
 from app.controllers.chat_gpt.script_idea import generate_script_ideas
+from app.models.insights import Insights
 
 load_dotenv()
 
@@ -39,21 +40,20 @@ def generate_script():
         description = data['description']
         link = data.get('link')
         script_idea = data['script_idea']
+        user_id = data.get('user_id')
+        transcript = data.get('transcipt')
         
         twitter_content = None
+        articles_scraped = 0
 
-        # If Twitter link is provided, scrape the content
-        if link:
-            result, status = scrape_twitter_posts_controller(link)
-            if status == 200 and 'tweets' in result:
-                twitter_content = ' '.join([tweet.get('text', '') for tweet in result['tweets']])
 
         # Generate scripts using ChatGPT
-        script_variations = generate_scripts_with_chatgpt(product_name, description, script_idea, twitter_content)
+        script_variations = generate_scripts_with_chatgpt(product_name, description, script_idea, transcript)
 
         return jsonify({
             "message": "Scripts generated successfully",
-            "scripts": script_variations
+            "scripts": script_variations,
+            "articles_scraped": articles_scraped
         }), 200
 
     except Exception as e:
@@ -82,32 +82,53 @@ def generate_script_idea():
         description = data['description']
         link = data.get('link')
         script_idea = data['script_idea']
+        user_id = data.get('user_id')
         twitter_content = None
-
-        # Generate a unique idea_id
-        idea_id = str(uuid.uuid4())
+        articles_scraped = 0
 
         # If Twitter link is provided, scrape the content
         if link:
+            print("[DEBUG] Twitter link available:", link)
             result, status = scrape_twitter_posts_controller(link)
-            if status == 200 and 'tweets' in result:
-                twitter_content = ' '.join([tweet.get('text', '') for tweet in result['tweets']])
+            if status == 200 and result and 'tweets' in result:
+                print(f"[DEBUG] Successfully scraped {len(result['tweets'])} tweets")
+                twitter_content = {
+                    'tweets': result['tweets']
+                }
+                articles_scraped = len(result['tweets'])
+                
+                # Update insights table with new articles scraped count
+                if user_id:
+                    insights = Insights.get_by_user(user_id)
+                    if not insights:
+                        insights = Insights(user_id=user_id)
+                        insights.save()
+                    
+                    # Update the articles_scraped count
+                    insights.articles_scraped += articles_scraped
+                    insights.update()
+            else:
+                print("[DEBUG] Unable to get tweets or empty response")
+                print(f"[DEBUG] Status: {status}, Result: {result}")
 
         # Generate script ideas using the new controller
         response = generate_script_ideas(
             product_name=product_name,
             description=description,
             script_idea=script_idea,
-            twitter_content=twitter_content
+            twitter_content=twitter_content,
         )
 
         if 'error' in response:
+            print(f"[ERROR] Script idea generation failed: {response['error']}")
             return jsonify(response), 500
 
         # Add idea_id to the response
         response['idea_id'] = idea_id
         response['idea_title'] = product_name
+        response['articles_scraped'] = articles_scraped
 
+        print(f"[DEBUG] Successfully generated {len(response.get('ideas', []))} script ideas")
         return jsonify(response), 200
 
     except Exception as e:

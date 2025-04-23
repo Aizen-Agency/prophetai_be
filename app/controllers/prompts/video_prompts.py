@@ -1,4 +1,4 @@
-def get_video_prompts(product_name, description, script_idea, twitter_content=None):
+def get_video_prompts(product_name, description, script_idea, transcript):
     """
     Returns a list of video prompts for different video types
     """
@@ -16,7 +16,7 @@ def get_video_prompts(product_name, description, script_idea, twitter_content=No
 
         Inputs:
 
-        • Transcript:
+        • {transcript}:
 
         INSERT TRANSCRIPT
         Writing Template:
@@ -51,7 +51,7 @@ def get_video_prompts(product_name, description, script_idea, twitter_content=No
 
         Inputs:
 
-        • Transcript:
+        • {transcript}:
 
         INSERT FOUNDER TRANSCRIPT
         Writing Template:
@@ -136,7 +136,7 @@ def get_video_prompts(product_name, description, script_idea, twitter_content=No
 
         1. My Audio Transcript for Reference (So you can match my style):
 
-        **[INSERT YOUR PREVIOUS AUDIO TRANSCRIPT HERE]**
+        {transcript}
 
         2. Trending Video Transcript (So you have extra content to give you additional context about what is being discussed:
 
@@ -194,7 +194,7 @@ def get_video_prompts(product_name, description, script_idea, twitter_content=No
 
         1. My Audio Transcript for Reference (So ChatGPT Matches My Style):
 
-        [INSERT YOUR PREVIOUS AUDIO TRANSCRIPT HERE]
+        {transcript}
 
         2. Trending Video Transcript (So ChatGPT Can React to It Properly):
 

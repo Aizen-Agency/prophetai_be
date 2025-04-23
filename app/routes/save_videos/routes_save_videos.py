@@ -27,15 +27,18 @@ def generate_video():
         data = request.get_json()
         user_id = data.get('user_id')
         script_id = data.get('script_id')
-        prompt = data.get('prompt')
         transcript = data.get('transcript')
-        script_content = data.get('script_content')
 
-        if not all([user_id, script_id, prompt, transcript, script_content]):
+        if not all([user_id, script_id, transcript]):
             return jsonify({'error': 'Missing required fields'}), 400
 
-        # Generate video using HeyGen
-        heygen_response, status_code = generate_heygen_video(prompt)
+        # Get script content from database
+        script = Script.get_by_id_and_user(script_id, user_id)
+        if not script:
+            return jsonify({'error': 'Script not found'}), 404
+
+        # Generate video using HeyGen with the script content
+        heygen_response, status_code = generate_heygen_video(script.script_content)
         
         if status_code != 200:
             return jsonify({'error': 'Failed to generate video with HeyGen'}), status_code
