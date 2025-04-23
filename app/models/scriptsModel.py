@@ -74,6 +74,21 @@ class Script:
         return None
 
     @staticmethod
+    def get_by_id_and_user(script_id, user_id):
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT * FROM scripts
+            WHERE idea_id = %s AND user_id = %s
+        """, (script_id, user_id))
+        script_data = cur.fetchone()
+        cur.close()
+        conn.close()
+        if script_data:
+            return Script(**script_data)
+        return None
+
+    @staticmethod
     def delete(script_id):
         conn = get_db_connection()
         cur = conn.cursor()
