@@ -1,51 +1,44 @@
 from flask import Blueprint, jsonify, request
-from ...models.insights import Insights
+from ...models.userData import User
+from app.extensions import get_db_connection
 from datetime import datetime
+from app.models.insights import Insights
+from app.models.scriptsModel import Script
+from app.models.videoModel import Video
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/insights/<int:user_id>', methods=['GET'])
 def get_user_insights(user_id):
     try:
+        # Get user's insights
         insights = Insights.get_by_user(user_id)
         
         if not insights:
-            return jsonify({
-                'message': 'No insights found for this user',
-                'data': {
-                    'months': {
-                        'january': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'february': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'march': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'april': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'may': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'june': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'july': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'august': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'september': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'october': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'november': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0},
-                        'december': {'articles': 0, 'scripts': 0, 'videos_generated': 0, 'videos_posted': 0}
-                    }
-                }
-            }), 200
+            insights = Insights(user_id=user_id)
+            insights.save()
 
-        # Get current month
-        current_month = datetime.now().strftime('%B').lower()
+        # Get count of scripts for the user
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM scripts WHERE user_id = %s", (user_id,))
+        scripts_count = cur.fetchone()['count']
         
-        # Get data for all months
-        months_data = {}
-        months = ['january', 'february', 'march', 'april', 'may', 'june', 
-                 'july', 'august', 'september', 'october', 'november', 'december']
+        # Get count of videos for the user
+        cur.execute("SELECT COUNT(*) FROM videos WHERE user_id = %s", (user_id,))
+        videos_count = cur.fetchone()['count']
         
-        for month in months:
-            months_data[month] = insights.get_monthly_data(month)
+        cur.close()
+        conn.close()
 
         return jsonify({
-            'message': 'Insights retrieved successfully',
+            'message': 'User data retrieved successfully',
             'data': {
-                'months': months_data,
-                'current_month': current_month
+                'total_articles_scraped': insights.articles_scraped,
+                'total_videos_posted': insights.videos_posted,
+                'total_scripts_generated': scripts_count,
+                'total_videos_created': videos_count,
+                'account_created_at': insights.created_at.isoformat()
             }
         }), 200
 
@@ -56,11 +49,7 @@ def get_user_insights(user_id):
 def update_user_insights(user_id):
     try:
         data = request.get_json()
-        month = data.get('month')
-        metrics = data.get('metrics')
-
-        if not month or not metrics:
-            return jsonify({'error': 'Missing month or metrics data'}), 400
+        videos_posted = data.get('videos_posted', 0)
 
         # Get or create insights for user
         insights = Insights.get_by_user(user_id)
@@ -68,14 +57,14 @@ def update_user_insights(user_id):
             insights = Insights(user_id=user_id)
             insights.save()
 
-        # Update metrics for the specified month
-        insights.update_monthly_data(month, metrics)
+        # Update videos posted count
+        insights.videos_posted = videos_posted
+        insights.update()
 
         return jsonify({
             'message': 'Insights updated successfully',
             'data': {
-                'month': month,
-                'metrics': metrics
+                'videos_posted': videos_posted
             }
         }), 200
 
