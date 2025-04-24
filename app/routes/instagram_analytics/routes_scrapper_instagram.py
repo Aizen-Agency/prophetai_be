@@ -2,24 +2,25 @@ from flask import Blueprint, request, jsonify
 from app.controllers.apify.instagram_scraper import scrape_instagram_profile_posts
 from app.controllers.chat_gpt.calculate_analytics import calculate_instagram_analytics
 from app.extensions import get_db_connection
+from app.models.analytics import Analytics
 
 api_instagram = Blueprint("instagram", __name__, url_prefix="")
 
 @api_instagram.route('/instagram-analytics', methods=['GET'])
-def get_instagram_url():
+def get_instagram_analytics():
     try:
-        # For now, using a dummy URL - replace with actual database query later
-        dummy_url = "https://www.instagram.com/leomessi/"
-        
+        # Fetch analytics data from the database
+        analytics_data = Analytics.get_all()
+        analytics_list = [analytics.to_dict() for analytics in analytics_data]
+
         return jsonify({
-            "message": "Instagram URL retrieved successfully",
-            "instagram_url": dummy_url
+            "message": "Analytics data retrieved successfully",
+            "analytics": analytics_list
         }), 200
 
     except Exception as e:
         print(f"[ERROR] {str(e)}")
         return jsonify({"error": "An unexpected error occurred"}), 500
-        
 
 # @api_instagram.route('/instagram-analytics', methods=['POST'])
 # def instagram_analytics():
