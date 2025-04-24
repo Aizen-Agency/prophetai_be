@@ -2,6 +2,8 @@ from apify_client import ApifyClient
 from flask import jsonify
 import dotenv
 from datetime import datetime, timedelta
+import time
+import threading
 
 def scrape_twitter_posts_controller(profile_url):
     try:
@@ -42,16 +44,30 @@ def scrape_twitter_posts_controller(profile_url):
         print(f"💾 Check your data here: https://console.apify.com/storage/datasets/{run['defaultDatasetId']}")
 
         tweets_data = []
-        for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+        timeout = 20  # 20 seconds timeout
+        start_time = time.time()
+        
+        # Create a dataset client for the dataset
+        dataset_client = client.dataset(run["defaultDatasetId"])
+        
+        # Get items with timeout
+        for item in dataset_client.iterate_items():
+            # Check if we've exceeded the timeout
+            if time.time() - start_time >= timeout:
+                print(f"[DEBUG] Timeout of {timeout} seconds reached. Stopping data collection.")
+                break
+                
             print(f"[DEBUG] Processing tweet: {item}")
             tweets_data.append(item)
 
-        print(f"[DEBUG] Scraping completed. Found {len(tweets_data)} tweets")
+        elapsed_time = time.time() - start_time
+        print(f"[DEBUG] Scraping completed in {elapsed_time:.2f} seconds. Found {len(tweets_data)} tweets")
+        
         if not tweets_data:
-            print("[DEBUG] No tweet content was extracted. This might be due to Twitter's anti-scraping measures.")
-            return {"error": "No tweet content could be extracted"}, 500
+            print("[DEBUG] No tweet content was extracted. This might be due to Twitter's anti-scraping measures or timeout.")
+            return {"error": "No tweet content could be extracted", "timeout_occurred": elapsed_time >= timeout}, 500
             
-        return {"tweets": tweets_data}, 200
+        return {"tweets": tweets_data, "timeout_occurred": elapsed_time >= timeout}, 200
     except Exception as e:
         print(f"[ERROR] Twitter scraper failed: {str(e)}")
         return {"error": str(e)}, 500
