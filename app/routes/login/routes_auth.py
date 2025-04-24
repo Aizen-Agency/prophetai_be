@@ -7,6 +7,7 @@ from app.extensions import get_db_connection
 import jwt
 from datetime import datetime, timedelta
 import psycopg2.extras
+from app.models.insights import Insights
 
 load_dotenv()
 
@@ -58,6 +59,12 @@ def signup():
         user.save()
 
         print("user saved")
+
+        # Create a new insights record for the user
+        insights = Insights(user_id=user.id)
+        insights.save()
+
+        print("insights record created")
 
         return jsonify({
             'message': 'User created successfully',

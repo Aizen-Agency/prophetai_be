@@ -18,28 +18,19 @@ def get_user_insights(user_id):
             insights = Insights(user_id=user_id)
             insights.save()
 
-        # Get count of scripts for the user
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM scripts WHERE user_id = %s", (user_id,))
-        scripts_count = cur.fetchone()['count']
-        
-        # Get count of videos for the user
-        cur.execute("SELECT COUNT(*) FROM videos WHERE user_id = %s", (user_id,))
-        videos_count = cur.fetchone()['count']
-        
-        cur.close()
-        conn.close()
+        # Prepare monthly data
+        monthly_data = []
+        for month in ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']:
+            monthly_data.append({
+                'name': month.capitalize(),
+                'articles': getattr(insights, f'{month}_total_articles_scraped'),
+                'scripts': getattr(insights, f'{month}_total_scripts_generated'),
+                'totalVideos': getattr(insights, f'{month}_total_videos_generated')
+            })
 
         return jsonify({
             'message': 'User data retrieved successfully',
-            'data': {
-                'total_articles_scraped': insights.articles_scraped,
-                'total_videos_posted': insights.videos_posted,
-                'total_scripts_generated': scripts_count,
-                'total_videos_created': videos_count,
-                'account_created_at': insights.created_at.isoformat()
-            }
+            'data': monthly_data
         }), 200
 
     except Exception as e:
