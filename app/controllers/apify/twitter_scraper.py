@@ -7,12 +7,12 @@ def scrape_twitter_posts_controller(profile_url):
     try:
         print(f"[DEBUG] Starting Twitter scraper for URL: {profile_url}")
         
-        client = ApifyClient("apify_api_ybMbddryhwVdnfhoWT7bYZWxd4s1A64quJvO")
+        client = ApifyClient("apify_api_Kj06ex13B1I68hYcX3gxpklsjgrsyH44bRGM")
         print("[DEBUG] Apify client initialized successfully")
 
         # Calculate dates for the last 7 days
         end_date = datetime.now()
-        start_date = end_date - timedelta(days=7)
+        start_date = end_date - timedelta(days=2)
         
         # Format dates as YYYY-MM-DD
         start_date_str = start_date.strftime("%Y-%m-%d")
