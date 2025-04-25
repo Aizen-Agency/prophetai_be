@@ -33,6 +33,7 @@ def generate_video():
         user_id = data.get('user_id')
         script_id = data.get('script_id')
         transcript = data.get('transcript')
+        heygen_settings = data.get('heygen', {})
 
         if not all([user_id, script_id, transcript]):
             return jsonify({'error': 'Missing required fields'}), 400
@@ -42,8 +43,27 @@ def generate_video():
         if not script:
             return jsonify({'error': 'Script not found'}), 404
 
+        # Set up HeyGen configuration
+        api_key = None
+        avatar_id = None
+        template_id = None
+        voice_id = None
+        
+        # Use custom settings if provided and not using defaults
+        if heygen_settings and not heygen_settings.get('useDefault', False):
+            api_key = heygen_settings.get('apiKey')
+            avatar_id = heygen_settings.get('avatarId')
+            template_id = heygen_settings.get('templateId')
+            voice_id = heygen_settings.get('voiceId')
+
         # Generate video using HeyGen with the script content
-        heygen_response, status_code = generate_heygen_video(script.script_content)
+        heygen_response, status_code = generate_heygen_video(
+            script.script_content,
+            api_key=api_key,
+            avatar_id=avatar_id,
+            template_id=template_id,
+            voice_id=voice_id
+        )
         
         if status_code != 200:
             return jsonify({'error': 'Failed to generate video with HeyGen'}), status_code
@@ -58,7 +78,7 @@ def generate_video():
         video_status = None
 
         while attempts < max_attempts:
-            status_data, status_code = get_heygen_video_status(video_id)
+            status_data, status_code = get_heygen_video_status(video_id, api_key)
             if status_code == 200:
                 video_status = status_data.get('data', {}).get('status')
                 if video_status == 'completed':
