@@ -11,7 +11,6 @@ from app.models.userData import User
 from app.models.scriptsModel import Script
 import jwt
 from datetime import datetime, timedelta
-from app.controllers.apify.twitter_scraper import scrape_twitter_posts_controller
 from app.controllers.chat_gpt.script_generation import generate_scripts_with_chatgpt
 from app.controllers.chat_gpt.script_idea import generate_script_ideas
 from app.models.insights import Insights
@@ -105,41 +104,29 @@ def generate_script_idea():
         link = data.get('link')
         script_idea = data['script_idea']
         user_id = data['user_id']
-        twitter_content = None
-        articles_scraped = 0
+        
+        # Get twitter_content from frontend if available
+        twitter_content = data.get('twitter_content')
+        articles_scraped = len(twitter_content.get('tweets', [])) if twitter_content else 0
 
         print(f"[DEBUG] User ID: {user_id}, Link: {link}")
 
-        # If Twitter link is provided, scrape the content
-        if link:
-            print("[DEBUG] Twitter link available:", link)
-            result, status = scrape_twitter_posts_controller(link)
-            if status == 200 and result and 'tweets' in result:
-                print(f"[DEBUG] Successfully scraped {len(result['tweets'])} tweets")
-                twitter_content = {
-                    'tweets': result['tweets']
-                }
-                articles_scraped = len(result['tweets'])
-                print(f"[DEBUG] Articles to be added: {articles_scraped}")
-                
-                # Update insights table with new articles scraped count
-                insights = Insights.get_by_user(user_id)
-                print(f"[DEBUG] Current insights: {insights}")
-                
-                if not insights:
-                    print("[DEBUG] Creating new insights record")
-                    insights = Insights(user_id=user_id)
-                    insights.save()
-                
-                # Determine the current month
-                current_month = datetime.now().strftime('%b').lower()
-                
-                # Update monthly data
-                insights.update_monthly_data(current_month, articles=articles_scraped)
-                print(f"[DEBUG] Updated insights in database")
-            else:
-                print("[DEBUG] Unable to get tweets or empty response")
-                print(f"[DEBUG] Status: {status}, Result: {result}")
+        # If we have twitter content from frontend, update insights
+        if twitter_content and articles_scraped > 0:
+            print(f"[DEBUG] Using provided Twitter content with {articles_scraped} tweets")
+            
+            # Update insights with the provided articles count
+            insights = Insights.get_by_user(user_id)
+            if not insights:
+                insights = Insights(user_id=user_id)
+                insights.save()
+            
+            # Determine the current month
+            current_month = datetime.now().strftime('%b').lower()
+            
+            # Update monthly data
+            insights.update_monthly_data(current_month, articles=articles_scraped)
+            print(f"[DEBUG] Updated insights in database with {articles_scraped} articles")
 
         # Generate script ideas using the new controller
         response = generate_script_ideas(

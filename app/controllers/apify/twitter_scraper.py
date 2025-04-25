@@ -39,7 +39,7 @@ def scrape_twitter_posts_controller(profile_url):
         print("[DEBUG] Run input configuration prepared")
 
         print("[DEBUG] Starting Apify actor execution...")
-        run = client.actor("builditn0w/x-twitter-scrapper").call(run_input=run_input)
+        run = client.actor("61RPP7dywgiy0JPD0").call(run_input=run_input)
         print(f"[DEBUG] Apify actor execution completed. Run ID: {run.get('id')}")
         print(f"💾 Check your data here: https://console.apify.com/storage/datasets/{run['defaultDatasetId']}")
 
