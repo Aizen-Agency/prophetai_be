@@ -20,7 +20,7 @@ def fetch_and_store_instagram_analytics():
     print("Starting Instagram analytics fetch...")
     
     # Dummy Instagram profile URL to scrape
-    instagram_profile_url = "https://www.instagram.com/Nike/"
+    instagram_profile_url = "https://www.instagram.com/instagram/"
     
     try:
         # Scrape the Instagram profile
