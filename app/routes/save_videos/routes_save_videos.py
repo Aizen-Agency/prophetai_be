@@ -48,6 +48,10 @@ def generate_video():
         avatar_id = None
         template_id = None
         voice_id = None
+        background_type = "color"
+        background_value = "#008000"
+        background_asset_id = None
+        background_url = None
         
         # Use custom settings if provided and not using defaults
         if heygen_settings and not heygen_settings.get('useDefault', False):
@@ -55,6 +59,16 @@ def generate_video():
             avatar_id = heygen_settings.get('avatarId')
             template_id = heygen_settings.get('templateId')
             voice_id = heygen_settings.get('voiceId')
+            
+            # Handle background settings
+            background_settings = heygen_settings.get('background', {})
+            if background_settings:
+                background_type = background_settings.get('type', 'color')
+                if background_type == 'color':
+                    background_value = background_settings.get('value', '#008000')
+                elif background_type in ['image', 'video']:
+                    background_asset_id = background_settings.get('assetId')
+                    background_url = background_settings.get('url')
 
         # Generate video using HeyGen with the script content
         heygen_response, status_code = generate_heygen_video(
@@ -62,7 +76,11 @@ def generate_video():
             api_key=api_key,
             avatar_id=avatar_id,
             template_id=template_id,
-            voice_id=voice_id
+            voice_id=voice_id,
+            background_type=background_type,
+            background_value=background_value,
+            background_asset_id=background_asset_id,
+            background_url=background_url
         )
         
         if status_code != 200:
@@ -170,11 +188,11 @@ def upload_heygen_video():
         s3_service.s3_client.upload_fileobj(buffer, s3_service.bucket_name, s3_key)
         print("🎉 Upload to S3 successful!")
 
-        # Get presigned URL
-        presigned_url = s3_service.get_presigned_url(s3_key)
+        # Get public URL instead of presigned URL
+        public_url = s3_service.get_object_url(s3_key)
 
         # Save video details to the database
-        video = Video(user_id=user_id, script_id=original_script_id, video_url=presigned_url, size='unknown')
+        video = Video(user_id=user_id, script_id=original_script_id, video_url=public_url, size='unknown')
         video.save()
         
         # Update insights for the current month
@@ -195,7 +213,7 @@ def upload_heygen_video():
         return jsonify({
             "message": "Video uploaded to S3 successfully",
             "s3_key": s3_key,
-            "presigned_url": presigned_url,
+            "video_url": public_url,
             "thumbnail_url": thumbnail_url,
             "status": "completed"
         }), 200
@@ -220,4 +238,4 @@ def get_user_videos(user_id):
         }), 200
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500
