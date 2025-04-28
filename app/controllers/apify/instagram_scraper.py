@@ -2,7 +2,7 @@ from apify_client import ApifyClient
 
 def scrape_instagram_profile_posts(profile_url):
     try:
-        client = ApifyClient("apify_api_Kj06ex13B1I68hYcX3gxpklsjgrsyH44bRGM")
+        client = ApifyClient("apify_api_ybMbddryhwVdnfhoWT7bYZWxd4s1A64quJvO")
 
         username = profile_url.rstrip('/').split('/')[-1]
         if not username:
@@ -12,14 +12,14 @@ def scrape_instagram_profile_posts(profile_url):
             "searchType": "user",
             "directUrls": [profile_url],
             "resultsType": "posts",
-            "resultsLimit": 1,
+            "resultsLimit": 10,
             "onlyPostsNewerThan": "7 days",
             "proxyConfiguration": {"useApifyProxy": True},
             "searchLimit": 10
             
         }
 
-        run = client.actor("apify/instagram-scraper").call(run_input=run_input, wait_secs=30)
+        run = client.actor("apify/instagram-scraper").call(run_input=run_input)
 
         posts = [
             item for item in client.dataset(run["defaultDatasetId"]).iterate_items()
