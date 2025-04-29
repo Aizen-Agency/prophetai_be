@@ -16,6 +16,7 @@ def get_all_videos():
             SELECT v.*, u.firstname, u.lastname, u.email
             FROM videos v
             JOIN userData u ON v.user_id = u.id
+            ORDER BY v.created_at DESC
         """)
         
         videos = cur.fetchall()
@@ -27,14 +28,14 @@ def get_all_videos():
         for video in videos:
             video_list.append({
                 'id': video['id'],
+                'video_url': video['video_url'],
+                'size': video['size'],
+                'created_at': video['created_at'].strftime('%a, %d %b %Y %H:%M:%S GMT'),
                 'user': {
                     'id': video['user_id'],
                     'name': f"{video['firstname']} {video['lastname']}",
                     'email': video['email']
-                },
-                'video_url': video['video_url'],
-                'size': video['size'],
-                'created_at': video['created_at']
+                }
             })
         
         return jsonify({

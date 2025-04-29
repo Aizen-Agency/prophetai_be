@@ -121,12 +121,12 @@ def generate_video():
 @video_bp.route('/upload-heygen-video', methods=['POST'])
 def upload_heygen_video():
     data = request.get_json()
-    video_id = data.get('video_id')
+    video_ids = data.get('video_ids', [])  # Accept array of video IDs
     user_id = data.get('user_id')
     script_id = data.get('script_id')
 
-    if not all([video_id, user_id, script_id]):
-        return jsonify({"error": "video_id, user_id, and script_id are required"}), 400
+    if not all([video_ids, user_id, script_id]):
+        return jsonify({"error": "video_ids, user_id, and script_id are required"}), 400
 
     try:
         # Fetch the original script ID using the idea_id
@@ -137,84 +137,105 @@ def upload_heygen_video():
         # Use the original script ID
         original_script_id = script.id
 
-        # Check if video already exists for this script
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM videos WHERE user_id = %s AND script_id = %s", (user_id, original_script_id))
-        existing_video = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        if existing_video:
-            return jsonify({
-                "message": "Video for this script already exists",
-                "video_id": existing_video['id'],
-                "presigned_url": existing_video['video_url'],
-                "status": "completed"
-            }), 200
-
-        # Check HeyGen video status
+        results = []
         headers = {"X-Api-Key": HEYGEN_API_KEY}
-        video_status_url = f"https://api.heygen.com/v1/video_status.get?video_id={video_id}"
-        
-        print("⏳ Checking video status...")
-        response = requests.get(video_status_url, headers=headers)
-        response.raise_for_status()
-        status_data = response.json()["data"]
-        status = status_data["status"]
-        
-        # Return current status if not completed
-        if status != "completed":
-            return jsonify({
-                "status": status,
-                "message": f"Video is currently {status}. Please check back later."
-            }), 202  # 202 Accepted means the request was valid but processing is not complete
-        
-        # If video is completed, process it
-        video_url = status_data["video_url"]
-        thumbnail_url = status_data.get("thumbnail_url", "")
-        print(f"✅ Video completed! Downloading from: {video_url}")
 
-        # Download video in memory
-        video_response = requests.get(video_url, stream=True)
-        video_response.raise_for_status()
+        for video_id in video_ids:
+            print(f"\n🔄 Processing video {video_id}...")
+            
+            # Check if video already exists for this script
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM videos WHERE user_id = %s AND script_id = %s", (user_id, original_script_id))
+            existing_video = cur.fetchone()
+            cur.close()
+            conn.close()
 
-        buffer = BytesIO(video_response.content)
+            if existing_video:
+                print(f"✅ Video {video_id} already exists")
+                results.append({
+                    "video_id": existing_video['id'],
+                    "presigned_url": existing_video['video_url'],
+                    "status": "completed"
+                })
+                continue
 
-        # Define S3 key
-        s3_key = f"videos/heygen_{video_id}.mp4"
+            # Check HeyGen video status
+            video_status_url = f"https://api.heygen.com/v1/video_status.get?video_id={video_id}"
+            
+            print(f"⏳ Checking video status for video_id: {video_id}")
+            response = requests.get(video_status_url, headers=headers)
+            response.raise_for_status()
+            status_data = response.json()["data"]
+            status = status_data["status"]
+            
+            # If video is not completed, return its current status
+            if status != "completed":
+                print(f"⏳ Video {video_id} is still {status}")
+                results.append({
+                    "video_id": video_id,
+                    "status": status,
+                    "message": f"Video is currently {status}. Please check back later."
+                })
+                return jsonify({
+                    "message": f"Video {video_id} is still processing",
+                    "results": results,
+                    "status": "processing"
+                }), 202
+            
+            # If video is completed, process it
+            print(f"✅ Video {video_id} completed! Downloading from: {status_data['video_url']}")
+            video_url = status_data["video_url"]
+            thumbnail_url = status_data.get("thumbnail_url", "")
 
-        # Upload to S3
-        s3_service.s3_client.upload_fileobj(buffer, s3_service.bucket_name, s3_key)
-        print("🎉 Upload to S3 successful!")
+            # Download video in memory
+            video_response = requests.get(video_url, stream=True)
+            video_response.raise_for_status()
 
-        # Get public URL instead of presigned URL
-        public_url = s3_service.get_object_url(s3_key)
+            buffer = BytesIO(video_response.content)
 
-        # Save video details to the database
-        video = Video(user_id=user_id, script_id=original_script_id, video_url=public_url, size='unknown')
-        video.save()
-        
-        # Update insights for the current month
-        current_month = datetime.now().strftime('%b').lower()  # Get current month abbreviation in lowercase
-        insights = Insights.get_by_user(user_id)
-        
-        if insights:
-            # Increment video count for the current month
-            insights.update_monthly_data(current_month, articles=0, scripts=0, videos=1)
-            print(f"✅ Updated insights for user {user_id} - incremented {current_month}_total_videos_generated")
-        else:
-            # Create new insights record if it doesn't exist
-            new_insights = Insights(user_id=user_id)
-            new_insights.save()
-            new_insights.update_monthly_data(current_month, articles=0, scripts=0, videos=1)
-            print(f"✅ Created new insights for user {user_id} with {current_month}_total_videos_generated = 1")
+            # Define S3 key
+            s3_key = f"videos/heygen_{video_id}.mp4"
 
+            # Upload to S3
+            print(f"📤 Uploading video {video_id} to S3...")
+            s3_service.s3_client.upload_fileobj(buffer, s3_service.bucket_name, s3_key)
+            print(f"✅ Upload to S3 successful for video {video_id}!")
+
+            # Get public URL instead of presigned URL
+            public_url = s3_service.get_object_url(s3_key)
+
+            # Save video details to the database
+            print(f"💾 Saving video {video_id} details to database...")
+            video = Video(user_id=user_id, script_id=original_script_id, video_url=public_url, size='unknown')
+            video.save()
+            
+            # Update insights for the current month
+            current_month = datetime.now().strftime('%b').lower()
+            insights = Insights.get_by_user(user_id)
+            
+            if insights:
+                insights.update_monthly_data(current_month, articles=0, scripts=0, videos=1)
+                print(f"✅ Updated insights for user {user_id} - incremented {current_month}_total_videos_generated")
+            else:
+                new_insights = Insights(user_id=user_id)
+                new_insights.save()
+                new_insights.update_monthly_data(current_month, articles=0, scripts=0, videos=1)
+                print(f"✅ Created new insights for user {user_id} with {current_month}_total_videos_generated = 1")
+
+            results.append({
+                "video_id": video_id,
+                "s3_key": s3_key,
+                "video_url": public_url,
+                "thumbnail_url": thumbnail_url,
+                "status": "completed"
+            })
+            print(f"✅ Successfully completed processing for video {video_id}")
+
+        # All videos have been processed
         return jsonify({
-            "message": "Video uploaded to S3 successfully",
-            "s3_key": s3_key,
-            "video_url": public_url,
-            "thumbnail_url": thumbnail_url,
+            "message": "All videos processed successfully",
+            "results": results,
             "status": "completed"
         }), 200
 
