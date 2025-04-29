@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 
 def calculate_instagram_analytics(posts_data):
     total_views = 0
@@ -13,14 +14,19 @@ def calculate_instagram_analytics(posts_data):
             views = post.get("videoViewCount", 0) or post.get("viewCount", 0) or 0
             likes = post.get("likesCount", 0) or post.get("likeCount", 0) or 0
             comments = post.get("commentsCount", 0) or post.get("commentCount", 0) or 0
-            timestamp = post.get("takenAtTimestamp")
+            timestamp = post.get("timestamp")
 
             if timestamp:
-                post_date = datetime.fromtimestamp(timestamp)
+                # Parse ISO format timestamp string and ensure it's timezone-aware
+                post_date = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
             else:
-                post_date = datetime.utcnow()
+                # Use UTC timezone for current time
+                post_date = datetime.now(timezone.utc)
 
-            avg_views_per_day = round(views / max((datetime.utcnow() - post_date).days, 1))
+            # Get current time in UTC for consistent comparison
+            current_time = datetime.now(timezone.utc)
+            days_diff = (current_time - post_date).days
+            avg_views_per_day = round(views / max(days_diff, 1))
 
             total_views += views
             total_likes += likes

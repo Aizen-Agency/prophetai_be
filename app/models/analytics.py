@@ -55,15 +55,36 @@ class Analytics:
         cur = conn.cursor()
         
         try:
-            sql = """
-                INSERT INTO analytics (userid, posts, instagram_url)
-                VALUES (%s, %s, %s)
-                RETURNING analytics_id
+            # First check if a record with this Instagram URL already exists
+            check_sql = """
+                SELECT analytics_id FROM analytics 
+                WHERE instagram_url = %s AND userid = %s
             """
+            cur.execute(check_sql, (self.instagram_url, self.userid))
+            existing_record = cur.fetchone()
             
-            cur.execute(sql, (self.userid, self.posts, self.instagram_url))
-            result = cur.fetchone()
-            self.analytics_id = result['analytics_id']
+            if existing_record:
+                # Update existing record
+                update_sql = """
+                    UPDATE analytics 
+                    SET posts = %s, created_at = %s
+                    WHERE analytics_id = %s
+                    RETURNING analytics_id
+                """
+                cur.execute(update_sql, (self.posts, self.created_at, existing_record['analytics_id']))
+                result = cur.fetchone()
+                self.analytics_id = result['analytics_id']
+            else:
+                # Insert new record
+                insert_sql = """
+                    INSERT INTO analytics (userid, posts, instagram_url)
+                    VALUES (%s, %s, %s)
+                    RETURNING analytics_id
+                """
+                cur.execute(insert_sql, (self.userid, self.posts, self.instagram_url))
+                result = cur.fetchone()
+                self.analytics_id = result['analytics_id']
+            
             conn.commit()
             
         except Exception as e:
