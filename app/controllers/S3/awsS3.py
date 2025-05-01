@@ -38,10 +38,32 @@ class S3Service:
     def get_object_url(self, object_name):
         """
         Get the public URL for an S3 object
+        Note: This requires the object to be uploaded with public-read ACL
         :param object_name: S3 object name
         :return: Public URL as string
         """
         return f"https://{self.bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{object_name}"
+
+    def get_presigned_url(self, object_name, expiration=604800):
+        """
+        Generate a presigned URL to share an S3 object
+        :param object_name: S3 object name
+        :param expiration: Time in seconds for the presigned URL to remain valid (default: 7 days)
+        :return: Presigned URL as string. If error, returns None
+        """
+        try:
+            response = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={
+                    'Bucket': self.bucket_name,
+                    'Key': object_name
+                },
+                ExpiresIn=expiration
+            )
+            return response
+        except ClientError as e:
+            print(f"Error generating presigned URL: {e}")
+            return None
 
 # Create a singleton instance
 s3_service = S3Service()

@@ -202,12 +202,17 @@ def upload_heygen_video():
             s3_service.s3_client.upload_fileobj(buffer, s3_service.bucket_name, s3_key)
             print(f"✅ Upload to S3 successful for video {video_id}!")
 
-            # Get public URL instead of presigned URL
-            public_url = s3_service.get_object_url(s3_key)
+            # Get public URL (uncomment this line to use public URL)
+            # public_url = s3_service.get_object_url(s3_key)
+            
+            # Get presigned URL (uncomment this line to use presigned URL instead)
+            presigned_url = s3_service.get_presigned_url(s3_key)
 
             # Save video details to the database
             print(f"💾 Saving video {video_id} details to database...")
-            video = Video(user_id=user_id, script_id=original_script_id, video_url=public_url, size='unknown')
+            # video = Video(user_id=user_id, script_id=original_script_id, video_url=public_url, size='unknown')
+            # Uncomment the line below to use presigned URL instead
+            video = Video(user_id=user_id, script_id=original_script_id, video_url=presigned_url, size='unknown')
             video.save()
             
             # Update insights for the current month

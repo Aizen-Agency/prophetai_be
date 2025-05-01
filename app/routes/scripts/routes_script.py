@@ -298,3 +298,43 @@ Revolutionize your content strategy today!
     except Exception as e:
         print(f"[ERROR] {str(e)}")
         return jsonify({"error": "An unexpected error occurred"}), 500
+
+@api_scripts.route('/update-insights', methods=['POST'])
+def update_insights():
+    try:
+        data = request.get_json()
+        
+        # Validate request data
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+            
+        # Extract and validate required fields
+        required_fields = ['user_id', 'articles_scraped']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
+        # Extract data
+        user_id = data['user_id']
+        articles_scraped = data['articles_scraped']
+
+        # Update insights table
+        insights = Insights.get_by_user(user_id)
+        if not insights:
+            insights = Insights(user_id=user_id)
+            insights.save()
+        
+        # Determine the current month
+        current_month = datetime.now().strftime('%b').lower()
+        
+        # Update monthly data with the number of articles scraped
+        insights.update_monthly_data(current_month, articles=articles_scraped)
+        
+        return jsonify({
+            "message": "Insights updated successfully",
+            "articles_scraped": articles_scraped
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] {str(e)}")
+        return jsonify({"error": "An unexpected error occurred"}), 500
