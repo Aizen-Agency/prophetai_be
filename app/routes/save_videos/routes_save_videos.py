@@ -199,15 +199,29 @@ def upload_heygen_video():
             video_response = requests.get(video_url, stream=True)
             video_response.raise_for_status()
 
-            buffer = BytesIO(video_response.content)
+            # Create a BytesIO buffer and write the video content to it
+            buffer = BytesIO()
+            for chunk in video_response.iter_content(chunk_size=8192):
+                if chunk:
+                    buffer.write(chunk)
+            buffer.seek(0)  # Reset buffer position to start
 
             # Define S3 key
             s3_key = f"videos/heygen_{video_id}.mp4"
 
             # Upload to S3
             print(f"📤 Uploading video {video_id} to S3...")
-            s3_service.s3_client.upload_fileobj(buffer, s3_service.bucket_name, s3_key)
-            print(f"✅ Upload to S3 successful for video {video_id}!")
+            try:
+                s3_service.s3_client.upload_fileobj(
+                    buffer,
+                    s3_service.bucket_name,
+                    s3_key,
+                    ExtraArgs={'ContentType': 'video/mp4'}
+                )
+                print(f"✅ Upload to S3 successful for video {video_id}!")
+            except Exception as e:
+                print(f"❌ Error uploading to S3: {str(e)}")
+                raise
 
             # Get public URL (uncomment this line to use public URL)
             # public_url = s3_service.get_object_url(s3_key)
@@ -238,7 +252,7 @@ def upload_heygen_video():
             results.append({
                 "video_id": video_id,
                 "s3_key": s3_key,
-                "video_url": public_url,
+                "video_url": presigned_url,
                 "thumbnail_url": thumbnail_url,
                 "status": "completed"
             })
