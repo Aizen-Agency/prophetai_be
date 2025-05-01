@@ -138,7 +138,14 @@ def upload_heygen_video():
         original_script_id = script.id
 
         results = []
-        headers = {"X-Api-Key": HEYGEN_API_KEY}
+        # Get the API key from the request's heygen settings
+        heygen_settings = data.get('heygen', {})
+        api_key = heygen_settings.get('apiKey')
+        
+        if not api_key:
+            return jsonify({"error": "HeyGen API key is required"}), 400
+            
+        headers = {"X-Api-Key": api_key}
 
         for video_id in video_ids:
             print(f"\n🔄 Processing video {video_id}...")
