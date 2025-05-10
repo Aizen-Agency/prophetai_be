@@ -4,7 +4,7 @@ def get_video_prompts(product_name, description, script_idea, transcript):
     """
     prompts = [
         # Prompt 1: Talking Head Video
-        '''
+        f'''
         I'm providing you with:
         1. A speech-to-text transcript of my thoughts on a trending post.
         2. A writing template that reflects my preferred style.
@@ -20,6 +20,11 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         • {transcript}:
 
         INSERT TRANSCRIPT
+
+        • Script Idea:
+
+        {script_idea if script_idea else "No script idea provided"}
+
         Writing Template:
 
         Within the next 10 years, AI won't just be something you interact with—it'll be something that perceives the world *as you do.*
@@ -31,14 +36,10 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         The *bad* part? This is Meta. A company built on centralized data collection now has a device that *sees* everything you see and *knows* everything you feel. They promise privacy safeguards, but is your data processed on-device or sent to Meta's servers? If it's the latter, privacy is already lost.
 
         So ask yourself—do you want AI that serves *you*? Or one where you're just feeding it for free?
-
-        • Original Post Copy:
-
-        INSERT ORIGINAL POST COPY HERE
         ''',
         
         # Prompt 2: Fake Podcast
-        '''
+        f'''
         I'm providing you with:
         1. A speech-to-text transcript of my thoughts on a trending post.
         2. A writing template that reflects my preferred style.
@@ -56,6 +57,11 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         • {transcript}:
 
         INSERT FOUNDER TRANSCRIPT
+
+        • Script Idea:
+
+        {script_idea if script_idea else "No script idea provided"}
+
         Writing Template:
 
         If Musk was really trying to find, he wouldn't be hiring programmers
@@ -66,14 +72,10 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         Their job from the beginning was to go in, cut the programs that Elon and Trump weren't politically aligned with and call it fraud or waste, while NEVER bringing forth a criminal case showing actual fraud
         That would be a huge win for Trump if he could supply one case, but he won't
         Because again it was never about that.
-
-        • Original Post Copy:
-
-        INSERT ORIGINAL POST COPY
         ''',
         
         # Prompt 3: Reaction Video (Mid Roll)
-        '''
+        f'''
         Please create a reaction video script optimized for YouTube Shorts that maximizes engagement and virality. 
         
         • Start with a bold, polarizing, or emotionally compelling statement that immediately grabs attention
@@ -88,13 +90,17 @@ def get_video_prompts(product_name, description, script_idea, transcript):
 
         {transcript}
 
-        2. Trending Video Transcript (So you have extra content to give you additional context about what is being discussed):
+        2. Script Idea:
+
+        {script_idea if script_idea else "No script idea provided"}
+
+        3. Trending Video Transcript (So you have extra content to give you additional context about what is being discussed):
 
         **[INSERT TRENDING VIDEO TRANSCRIPT HERE]**
         ''',
         
         # Prompt 4: Reaction Video (End Roll)
-        '''
+        f'''
         Please create a reaction video script optimized for YouTube Shorts that maximizes engagement and virality.
         
         • Start with a bold, polarizing, or emotionally compelling statement to immediately grab attention
@@ -109,13 +115,17 @@ def get_video_prompts(product_name, description, script_idea, transcript):
 
         {transcript}
 
-        2. Trending Video Transcript (So you have additional context):
+        2. Script Idea:
+
+        {script_idea if script_idea else "No script idea provided"}
+
+        3. Trending Video Transcript (So you have additional context):
 
         [INSERT TRENDING VIDEO TRANSCRIPT HERE]
         ''',
         
         # Prompt 5: Video Title
-        "Please give me 10 possible titles for this script that are optimized for social media and grab a viewers attention, and keep it under 46 characters"
+        f"Please give me 10 possible titles for this script that are optimized for social media and grab a viewers attention, and keep it under 46 characters. Script Idea: {script_idea if script_idea else 'No script idea provided'}"
     ]
     
     return prompts

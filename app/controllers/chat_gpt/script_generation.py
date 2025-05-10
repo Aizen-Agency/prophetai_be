@@ -29,6 +29,20 @@ def generate_scripts_with_chatgpt(product_name=None, description=None, script_id
             if twitter_content:
                 formatted_prompt = formatted_prompt.replace("INSERT TRENDING VIDEO TRANSCRIPT", twitter_content)
 
+            script_type = [
+                "Talking Head Video",
+                "Fake Podcast",
+                "Reaction Video (Mid Roll)",
+                "Reaction Video (End Roll)",
+                "Video Titles"
+            ][i]
+
+            # Print the formatted prompt before sending to ChatGPT
+            print(f"\nSending prompt to ChatGPT for {script_type}:")
+            print("----------------------------------------")
+            print(formatted_prompt)
+            print("----------------------------------------\n")
+
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -40,14 +54,6 @@ def generate_scripts_with_chatgpt(product_name=None, description=None, script_id
             )
             
             script_content = response.choices[0].message.content
-            
-            script_type = [
-                "Talking Head Video",
-                "Fake Podcast",
-                "Reaction Video (Mid Roll)",
-                "Reaction Video (End Roll)",
-                "Video Titles"
-            ][i]
             
             scripts.append({
                 'id': f'copy{i+1}',
