@@ -138,6 +138,9 @@ def generate_script_idea():
 
         if 'error' in response:
             print(f"[ERROR] Script idea generation failed: {response['error']}")
+            # Add debug logging for the raw response
+            if 'raw_response' in response:
+                print(f"[DEBUG] Raw ChatGPT response: {response['raw_response']}")
             return jsonify(response), 500
 
         # Add idea_id to the response
