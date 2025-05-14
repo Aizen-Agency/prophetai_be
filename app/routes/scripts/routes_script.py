@@ -112,21 +112,21 @@ def generate_script_idea():
         print(f"[DEBUG] User ID: {user_id}, Link: {link}")
 
         # If we have twitter content from frontend, update insights
-        if twitter_content and articles_scraped > 0:
-            print(f"[DEBUG] Using provided Twitter content with {articles_scraped} tweets")
+        # if twitter_content and articles_scraped > 0:
+        #     print(f"[DEBUG] Using provided Twitter content with {articles_scraped} tweets")
             
-            # Update insights with the provided articles count
-            insights = Insights.get_by_user(user_id)
-            if not insights:
-                insights = Insights(user_id=user_id)
-                insights.save()
+        #     # Update insights with the provided articles count
+        #     insights = Insights.get_by_user(user_id)
+        #     if not insights:
+        #         insights = Insights(user_id=user_id)
+        #         insights.save()
             
-            # Determine the current month
-            current_month = datetime.now().strftime('%b').lower()
+        #     # Determine the current month
+        #     current_month = datetime.now().strftime('%b').lower()
             
-            # Update monthly data
-            insights.update_monthly_data(current_month, articles=articles_scraped)
-            print(f"[DEBUG] Updated insights in database with {articles_scraped} articles")
+        #     # Update monthly data
+        #     insights.update_monthly_data(current_month, articles=articles_scraped)
+        #     print(f"[DEBUG] Updated insights in database with {articles_scraped} articles")
 
         # Generate script ideas using the new controller
         response = generate_script_ideas(

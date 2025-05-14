@@ -42,14 +42,14 @@ Return a JSON object with a 'scriptIdeas' key containing an array of ideas. Exam
 
         # Call ChatGPT API
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a creative content strategist specializing in social media marketing. Always respond with valid JSON only."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=5000,
-            # response_format={ "type": "json_object" }
+            max_tokens=1000,
+            response_format={ "type": "json_object" }
         )
 
         # Get the response content
