@@ -10,14 +10,14 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 def generate_script_ideas(product_name, description, script_idea, twitter_content=None):
     try:
         # Construct the prompt
-        prompt = f"""Generate 50 unique and engaging script ideas for a product called '{product_name}'.
+        prompt = f"""Generate 20 unique and engaging script ideas for a product called '{product_name}'.
         
 Product Description: {description}
 
 User's Script Idea Requirements: {script_idea}
 
 
-Generate 50 different script ideas that:
+Generate 20 different script ideas that:
 1. Are creative and engaging
 2. Incorporate the product's key features
 3. Follow the user's requirements
