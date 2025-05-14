@@ -44,7 +44,7 @@ def generate_scripts_with_chatgpt(product_name=None, description=None, script_id
             print("----------------------------------------\n")
 
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a professional video content creator specializing in short-form video content."},
                     {"role": "user", "content": formatted_prompt}
