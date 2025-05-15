@@ -11,10 +11,11 @@ def calculate_instagram_analytics(posts_data):
 
     for idx, post in enumerate(posts_data):
         try:
-            views = post.get("videoViewCount", 0) or post.get("viewCount", 0) or 0
+            views = post.get("videoPlayCount", 0) or post.get("videoViewCount", 0) or 0
             likes = post.get("likesCount", 0) or post.get("likeCount", 0) or 0
             comments = post.get("commentsCount", 0) or post.get("commentCount", 0) or 0
             timestamp = post.get("timestamp")
+            display_url = post.get("displayUrl")
 
             if timestamp:
                 # Parse ISO format timestamp string and ensure it's timezone-aware
@@ -37,6 +38,7 @@ def calculate_instagram_analytics(posts_data):
                 "views": views,
                 "likes": likes,
                 "comments": comments,
+                "display_url": display_url,
                 "shares": 0,  # Instagram doesn't provide
                 "date": post_date.strftime("%m/%d/%Y"),
                 "avg_views_per_day": avg_views_per_day
