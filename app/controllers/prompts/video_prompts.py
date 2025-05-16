@@ -13,11 +13,12 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         Your task is to rewrite my thoughts into a polished, engaging, and structured video script that mirrors the writing template. The final script should maximize engagement, maintain strong pacing, and feel natural. Keep it concise—ideally around 180 words and make it accessible to a 17 year old. **Avoid sentence fragments or one-word rhetorical questions (e.g., 'China?') in the final script.**
         • Do not summarize the original post. Instead, focus on my perspective.
         • Ensure the script is compelling, concise, and structured for virality.
+        • DO NOT include the writing template in your response.
         • IMPORTANT: Provide ONLY the final script text without any formatting, section markers, or instructions. The output should be ready for direct voicing by an avatar.
 
         Inputs:
 
-        • {transcript}:
+        • Product/Topic:
 
         INSERT TRANSCRIPT
 
@@ -50,11 +51,12 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         • Do not ask questions in the script like "The Truth?", just get to the point
         • Keep the script punchy, conversational, and to the point.
         • No pauses, stage directions, or filler words—just clean, spoken words that flow naturally.
+        • DO NOT include the writing template in your response.
         • IMPORTANT: Provide ONLY the final script text without any formatting, section markers, or instructions. The output should be ready for direct voicing by an avatar.
 
         Inputs:
 
-        • {transcript}:
+        • Product/Topic:
 
         INSERT FOUNDER TRANSCRIPT
 
@@ -76,56 +78,81 @@ def get_video_prompts(product_name, description, script_idea, transcript):
         
         # Prompt 3: Reaction Video (Mid Roll)
         f'''
-        Please create a reaction video script optimized for YouTube Shorts that maximizes engagement and virality. 
-        
+        I'm providing you with:
+        1. A product/topic: "{product_name}"
+        2. A description: "{description}"
+        3. A script idea for context: "{script_idea if script_idea else 'No script idea provided'}"
+        4. Trending content for reference
+
+        Your task is to create a reaction video script optimized for YouTube Shorts that maximizes engagement and virality. The script should follow a reaction video format with a hook, commentary on a video clip, and a closing.
         • Start with a bold, polarizing, or emotionally compelling statement that immediately grabs attention
-        • The goal is to provoke curiosity, outrage, or strong interest within the first few seconds
+        • Include a [SHOW CLIP] marker where the video clip would be inserted
+        • Provide insightful, provocative commentary about the topic/product
+        • End with a thought-provoking statement or question to drive audience interaction
         • Keep sentences short and punchy with high-energy delivery
         • Write in a way that feels natural for spoken delivery
-        • IMPORTANT: Provide ONLY the final script text without any formatting, section markers, stage directions, or instructions. DO NOT include [SHOW CLIP] markers or any other non-spoken text. The output should be ready for direct voicing by an avatar.
+        • DO NOT include any section markers or script instructions in your final output
+        • DO NOT include the example template in your response
+        • IMPORTANT: Provide ONLY the final script text ready for direct voicing by an avatar
+
+        Example Script Format (DO NOT COPY THIS EXACTLY):
+        *"Hook statement that grabs attention."*
+        [SHOW CLIP]
+        *"Commentary about what was shown in the clip, analyzing or providing insight."*
+        *"More commentary with some rhetorical questions or points that provoke thought."*
+        *"Closing statement that encourages viewer engagement."*
 
         Inputs:
 
-        1. My Audio Transcript for Reference (So you can match my style):
+        • Product/Topic:
+        {product_name}
 
-        {transcript}
+        • Description:
+        {description}
 
-        2. Script Idea:
-
+        • Script Idea:
         {script_idea if script_idea else "No script idea provided"}
 
-        3. Trending Video Transcript (So you have extra content to give you additional context about what is being discussed):
-
+        • Trending Content:
         **[INSERT TRENDING VIDEO TRANSCRIPT HERE]**
         ''',
         
         # Prompt 4: Reaction Video (End Roll)
         f'''
-        Please create a reaction video script optimized for YouTube Shorts that maximizes engagement and virality.
-        
+        I'm providing you with:
+        1. A product/topic: "{product_name}"
+        2. A description: "{description}"
+        3. A script idea for context: "{script_idea if script_idea else 'No script idea provided'}"
+        4. Trending content for reference
+
+        Your task is to create a reaction video script optimized for YouTube Shorts that maximizes engagement and virality. This should be structured as an "end roll" reaction where your commentary comes after showing the clip.
         • Start with a bold, polarizing, or emotionally compelling statement to immediately grab attention
         • Keep the intro short and punchy with high-energy delivery
+        • Include a [SHOW CLIP] marker where the video clip would be inserted
+        • After the clip marker, provide insightful, provocative commentary
+        • End with a thought-provoking statement or question to drive audience interaction
         • Write in a way that feels natural for spoken delivery
-        • The intro should create curiosity
-        • IMPORTANT: Provide ONLY the final script text without any formatting, section markers, stage directions, or instructions. DO NOT include [SHOW CLIP] markers or any other non-spoken text. The output should be ready for direct voicing by an avatar.
+        • DO NOT include any section markers or script instructions in your final output
+        • DO NOT include the example script in your response
+        • IMPORTANT: Provide ONLY the final script text without any formatting, section markers, or instructions. The output should be ready for direct voicing by an avatar.
 
         Inputs:
 
-        1. My Audio Transcript for Reference (So you can match my style):
+        • Product/Topic:
+        {product_name}
+        
+        • Description:
+        {description}
 
-        {transcript}
-
-        2. Script Idea:
-
+        • Script Idea:
         {script_idea if script_idea else "No script idea provided"}
 
-        3. Trending Video Transcript (So you have additional context):
-
+        • Trending Content:
         [INSERT TRENDING VIDEO TRANSCRIPT HERE]
         ''',
         
         # Prompt 5: Video Title
-        f"Please give me 10 possible titles for this script that are optimized for social media and grab a viewers attention, and keep it under 46 characters. Script Idea: {script_idea if script_idea else 'No script idea provided'}"
+        f"Please give me 10 possible titles for a video about '{product_name}' that are optimized for social media and grab a viewer's attention. Keep each title under 46 characters. Script idea: {script_idea if script_idea else 'No script idea provided'}"
     ]
     
     return prompts

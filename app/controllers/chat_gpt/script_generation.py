@@ -21,13 +21,14 @@ def generate_scripts_with_chatgpt(product_name=None, description=None, script_id
             # Prepare the prompt with available variables
             formatted_prompt = prompt
             if product_name:
-                formatted_prompt = formatted_prompt.replace("INSERT TRANSCRIPT", f"Product: {product_name}")
+                formatted_prompt = formatted_prompt.replace("INSERT TRANSCRIPT", product_name)
             if description:
                 formatted_prompt = formatted_prompt.replace("INSERT FOUNDER TRANSCRIPT", description)
             if script_idea:
                 formatted_prompt = formatted_prompt.replace("INSERT ORIGINAL POST COPY", script_idea)
             if twitter_content:
-                formatted_prompt = formatted_prompt.replace("INSERT TRENDING VIDEO TRANSCRIPT", twitter_content)
+                formatted_prompt = formatted_prompt.replace("[INSERT TRENDING VIDEO TRANSCRIPT HERE]", twitter_content)
+                formatted_prompt = formatted_prompt.replace("**[INSERT TRENDING VIDEO TRANSCRIPT HERE]**", twitter_content)
 
             script_type = [
                 "Talking Head Video",
@@ -43,10 +44,16 @@ def generate_scripts_with_chatgpt(product_name=None, description=None, script_id
             print(formatted_prompt)
             print("----------------------------------------\n")
 
+            system_message = "You are a professional video content creator specializing in short-form video content. Provide ONLY the final script text without any template formatting or explanations."
+            
+            # For reaction videos, we need special handling for [SHOW CLIP] markers
+            if "Reaction Video" in script_type:
+                system_message = "You are a professional video content creator specializing in short-form video content. Provide the final script text INCLUDING the [SHOW CLIP] marker where appropriate. Do not include any other formatting, section markers, or explanations."
+
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a professional video content creator specializing in short-form video content."},
+                    {"role": "system", "content": system_message},
                     {"role": "user", "content": formatted_prompt}
                 ],
                 temperature=0.7,
